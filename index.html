@@ -306,6 +306,7 @@
     .trophy { margin-bottom: 12px; font-size: 4rem; }
     .results h2 { margin-bottom: 10px; font-size: clamp(1.8rem, 6vw, 2.5rem); }
     .final-score { margin: 18px 0; color: var(--yellow); font-size: clamp(2.7rem, 9vw, 4.2rem); font-weight: 900; }
+    .best-score { margin: -8px 0 18px; color: var(--cyan); font-weight: 800; }
     .result-copy { max-width: 470px; margin: 0 auto 26px; color: var(--muted); line-height: 1.7; }
     .review { margin: 30px 0; text-align: left; }
     .review h3 { margin: 0 0 14px; font-size: 1.2rem; }
@@ -385,6 +386,7 @@
       <p class="eyebrow">MISSION COMPLETE</p>
       <h2 id="result-title">탐험 완료!</h2>
       <p class="final-score" id="final-score"></p>
+      <p class="best-score" id="best-score" aria-live="polite"></p>
       <p class="result-copy" id="result-copy"></p>
       <section class="review" aria-labelledby="review-title">
         <h3 id="review-title">내 답안 돌아보기</h3>
@@ -422,10 +424,14 @@
     const reviewList = document.querySelector("#review-list");
     const themePicker = document.querySelector("#theme-picker");
     const themeNames = ["deep-space", "launch-pad", "lunar"];
+    const savedBestScore = Number(localStorage.getItem("space-quiz-best-score"));
     let current = 0;
     let score = 0;
     let locked = false;
     let selectedAnswers = [];
+    let bestScore = Number.isInteger(savedBestScore) && savedBestScore >= 0 && savedBestScore <= questions.length
+      ? savedBestScore
+      : 0;
 
     function applyTheme(theme) {
       document.body.dataset.theme = theme;
@@ -511,11 +517,16 @@
 
     function showResults() {
       renderAnswerReview();
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem("space-quiz-best-score", String(bestScore));
+      }
       quizScreen.hidden = true;
       resultsScreen.hidden = false;
       progress.value = questions.length;
       progress.setAttribute("aria-valuetext", `${questions.length}문제 중 ${questions.length}문제 완료`);
       document.querySelector("#final-score").textContent = `${score} / ${questions.length}점`;
+      document.querySelector("#best-score").textContent = `🏅 최고 기록 ${bestScore} / ${questions.length}점`;
       const percentage = score / questions.length;
       const message = percentage === 1
         ? "완벽해요! 당신은 진정한 우주 탐험가예요. 별들에게도 당신의 활약이 들릴 거예요!"
